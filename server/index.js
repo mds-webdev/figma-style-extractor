@@ -1,43 +1,59 @@
 const express = require("express");
 const cors = require("cors");
-
+const { exec } = require("child_process");
 
 const app = express();
 app.use(cors());
+app.use(express.json()); // to parse JSON POST bodies
 
-let cachedVersions = null;
-let lastFetched = 0;
-const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+const ROOT_DOMAIN = "gildner.dev"; // ⬅️ replace with your actual domain
 
-app.get("/api/php-versions", async (req, res) => {
-    const now = Date.now();
+app.post("/api/deploy", (req, res) => {
+    const { domain, phpVersion } = req.body;
 
-    if (cachedVersions && now - lastFetched < CACHE_DURATION) {
-        return res.json(cachedVersions);
+    if (!domain || !phpVersion) {
+        return res.status(400).json({ error: "Missing domain or phpVersion" });
     }
 
-    try {
-        const response = await fetch("https://www.php.net/downloads.php");
-        const html = await response.text();
+    const subdomain = `${domain}.${ROOT_DOMAIN}`;
 
-        const versionRegex = /PHP (\d+\.\d+)\.\d+/g;
-        const matches = [...html.matchAll(versionRegex)];
-        const versions = [...new Set(matches.map((m) => m[1]))]
-            .sort((a, b) => parseFloat(b) - parseFloat(a))
-            .slice(0, 4);
+    // 🔒 Step 1: Check if subdomain exists
+    const checkCommand = `plesk bin subdomain --info ${domain} -domain ${ROOT_DOMAIN}`;
 
-        cachedVersions = versions;
-        lastFetched = now;
+    exec(checkCommand, (checkErr) => {
+        if (!checkErr) {
+            return res.status(400).json({
+                error: `Subdomain "${subdomain}" already exists. Deployment cancelled.`,
+            });
+        }
 
-        res.json(versions);
-    } catch (err) {
-        console.error("[PHP Version Fetch Error]", err.message);
-        const fallback = [ "8.3", "8.2", "8.1"];
-        res.json(fallback);
-    }
+        // ✅ Safe to create — Step 2: Build creation + WordPress install command
+        const shellCommand = `
+      plesk bin subdomain --create ${domain} -domain ${ROOT_DOMAIN} -php ${phpVersion} &&
+      plesk bin site --update ${subdomain} -php ${phpVersion} &&
+      plesk ext wp-toolkit --install ${subdomain}
+    `;
+
+        exec(shellCommand, (deployErr, stdout, stderr) => {
+            if (deployErr) {
+                console.error(`❌ Deployment error:\n${stderr}`);
+                return res.status(500).json({
+                    error: "Deployment failed",
+                    details: stderr,
+                });
+            }
+
+            console.log(`✅ WordPress site created: ${subdomain}`);
+            res.json({
+                success: true,
+                message: `Deployment successful for ${subdomain}`,
+                output: stdout,
+            });
+        });
+    });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 app.listen(PORT, () => {
-    console.log(`✅ Backend running at http://localhost:${PORT}`);
+    console.log(`🔧 Backend running on http://localhost:${PORT}`);
 });
