@@ -3,6 +3,7 @@ import { getFileData } from '../api/figma';
 import { extractTokens } from '../utils/extractTokens';
 import { exportAsJSON, exportAsSCSS } from '../utils/exportTokens';
 import ColorSwatchGrid from '../components/ColorSwatchGrid';
+import FigmaProjectPicker from "../components/FigmaProjectPicker";
 import '../styles/Home.css';
 
 const Home = () => {
@@ -10,6 +11,7 @@ const Home = () => {
   const [output, setOutput] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
 
   const flattenNodes = (node, acc = {}) => {
     if (!node) return acc;
@@ -41,75 +43,108 @@ const Home = () => {
   };
 
   return (
-    <div className="container my-5">
-      <h1 className="mb-4">🎨 Figma Token Extractor</h1>
+      <div className="container my-5">
+          {/* 🔍 Project Picker */}
+          <FigmaProjectPicker
+              setSelectedProject={setSelectedProject}
+              extractTokens={extractTokens}
+          />
 
-      <div className="form-group mb-3">
-        <label>Figma File Key</label>
-        <input
-          className="form-control"
-          type="text"
-          placeholder="Paste your Figma file key here"
-          value={fileKey}
-          onChange={(e) => setFileKey(e.target.value)}
-        />
-      </div>
-
-      <button
-        className="btn btn-primary"
-        onClick={handleFetch}
-        disabled={loading || !fileKey}
-      >
-        {loading ? 'Extracting...' : 'Extract Tokens'}
-      </button>
-
-      {error && <div className="alert alert-danger mt-4">⚠️ {error}</div>}
-
-      {output && (
-        <>
-          {/* Color swatches */}
-          {output.colors && (
-            <>
-              <h4 className="mt-5">🎨 Color Tokens</h4>
-              <ColorSwatchGrid colors={output.colors} />
-            </>
-          )}
-
-          {/* Typography tokens */}
-          {output.typography && (
-            <>
-              <h4 className="mt-5">🔤 Typography Tokens</h4>
-              <div className="typography-preview">
-                {Object.entries(output.typography).map(([name, style]) => (
-                  <div key={name} className="typography-item">
-                    <div style={{ ...style, marginBottom: '0.25rem' }}>{name}</div>
-                    <code style={{ fontSize: '0.8rem', color: '#666' }}>
-                      {style.fontSize}, {style.fontWeight}, {style.lineHeight}
-                    </code>
-                  </div>
-                ))}
+          {/* ✨ Selected project feedback */}
+          {selectedProject && (
+              <div className="alert alert-success mt-3">
+                  <strong>Selected Project:</strong> {selectedProject.name}{" "}
+                  <br />
+                  <small>Project ID: {selectedProject.id}</small>
               </div>
-            </>
           )}
+          <h1 className="mb-4">🎨 Figma Token Extractor</h1>
 
-          {/* Export buttons */}
-          <div className="mt-4 d-flex gap-2">
-            <button
-              className="btn btn-outline-primary"
-              onClick={() => exportAsJSON(output)}
-            >
-              📄 Export as JSON
-            </button>
-            <button
-              className="btn btn-outline-secondary"
-              onClick={() => exportAsSCSS(output.colors)}
-            >
-              💅 Export Colors as SCSS
-            </button>
+          <div className="form-group mb-3">
+              <label>Figma File Key</label>
+              <input
+                  className="form-control"
+                  type="text"
+                  placeholder="Paste your Figma file key here"
+                  value={fileKey}
+                  onChange={(e) => setFileKey(e.target.value)}
+              />
           </div>
-        </>
-      )}
-    </div>
+
+          <button
+              className="btn btn-primary"
+              onClick={handleFetch}
+              disabled={loading || !fileKey}
+          >
+              {loading ? "Extracting..." : "Extract Tokens"}
+          </button>
+
+          {error && <div className="alert alert-danger mt-4">⚠️ {error}</div>}
+
+          {output && (
+              <>
+                  {/* Color swatches */}
+                  {output.colors && (
+                      <>
+                          <h4 className="mt-5">🎨 Color Tokens</h4>
+                          <ColorSwatchGrid colors={output.colors} />
+                      </>
+                  )}
+
+                  {/* Typography tokens */}
+                  {output.typography && (
+                      <>
+                          <h4 className="mt-5">🔤 Typography Tokens</h4>
+                          <div className="typography-preview">
+                              {Object.entries(output.typography).map(
+                                  ([name, style]) => (
+                                      <div
+                                          key={name}
+                                          className="typography-item"
+                                      >
+                                          <div
+                                              style={{
+                                                  ...style,
+                                                  marginBottom: "0.25rem",
+                                              }}
+                                          >
+                                              {name}
+                                          </div>
+                                          <code
+                                              style={{
+                                                  fontSize: "0.8rem",
+                                                  color: "#666",
+                                              }}
+                                          >
+                                              {style.fontSize},{" "}
+                                              {style.fontWeight},{" "}
+                                              {style.lineHeight}
+                                          </code>
+                                      </div>
+                                  )
+                              )}
+                          </div>
+                      </>
+                  )}
+
+                  {/* Export buttons */}
+                  <div className="mt-4 d-flex gap-2">
+                      <button
+                          className="btn btn-outline-primary"
+                          onClick={() => exportAsJSON(output)}
+                      >
+                          📄 Export as JSON
+                      </button>
+                      <button
+                          className="btn btn-outline-secondary"
+                          onClick={() => exportAsSCSS(output.colors)}
+                      >
+                          💅 Export Colors as SCSS
+                      </button>
+                  </div>
+              </>
+          )}
+      </div>
   );
 };
 
