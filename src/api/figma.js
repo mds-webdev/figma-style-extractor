@@ -3,10 +3,16 @@ import axios from "axios";
 
 const FIGMA_API_URL = "https://api.figma.com/v1";
 
+const token = "figd_2oeAwGZ5iM3fw46xaYMruyRVAPIeKfTjb6VMKAFK";
+
+if (!token) {
+    console.warn("⚠️ No Figma API token found in env!");
+}
+
 const axiosInstance = axios.create({
     baseURL: FIGMA_API_URL,
     headers: {
-        "X-Figma-Token": import.meta.env.VITE_FIGMA_API_KEY,
+        "X-Figma-Token": token || "invalid-token",
     },
 });
 
