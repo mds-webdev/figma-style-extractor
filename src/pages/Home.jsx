@@ -10,9 +10,9 @@ const tools = [
             "Extract and export color & typography tokens from Figma files.",
     },
     {
-        name: "Live Style Editor",
-        path: "/live-editor",
-        icon: "🎛️",
+        name: "Subdomain Creator",
+        path: "/subdomain-creator",
+        icon: "⚡",
         description:
             "Edit design tokens on the fly with live previews and exports.",
     },

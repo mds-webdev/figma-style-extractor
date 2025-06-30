@@ -4,7 +4,7 @@ import "../styles/AppLayout.css";
 
 const tools = [
     { path: "/figma", name: "Figma Companion", emoji: "🎨" },
-    { path: "/live-editor", name: "Live Style Editor", emoji: "🎛️" },
+    { path: "/subdomain-creator", name: "Subdomain creator", emoji: "⚡" },
     { path: "/brand-kit", name: "Brand Kit Generator", emoji: "📦" },
 ];
 
@@ -22,7 +22,9 @@ const AppLayout = ({ children }) => {
                         Gildner Developer Tools
                     </Link>
                 </h2>
+
                 <nav>
+                    <h6>Developer Tools</h6>
                     {tools.map((tool) => (
                         <Link
                             key={tool.path}
