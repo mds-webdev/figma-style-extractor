@@ -1,20 +1,28 @@
-export const extractAllColors = (allNodes) => {
+export const extractColors = (styles, allNodes) => {
     const colorTokens = {};
-    let count = 1;
 
-    Object.values(allNodes).forEach((node) => {
-        if (!node.fills) return;
+    Object.entries(styles).forEach(([styleId, style]) => {
+        if (style.styleType !== "FILL") return;
 
-        const paint = node.fills.find((f) => f.type === "SOLID" && f.color);
-        if (paint) {
-            const { r, g, b } = paint.color;
-            const rgb = `rgb(${Math.round(r * 255)}, ${Math.round(
-                g * 255
-            )}, ${Math.round(b * 255)})`;
+        // Try to find ANY node using this styleId
+        const node = Object.values(allNodes).find(
+            (n) =>
+                n.styles?.fill === styleId &&
+                n.fills?.some((f) => f.type === "SOLID")
+        );
 
-            const name = node.name || `Color ${count++}`;
-            colorTokens[name] = rgb;
+        const paint = node?.fills.find((f) => f.type === "SOLID" && f.color);
+        if (!paint) {
+            console.warn(`⚠️ No node found for style: ${style.name}`);
+            return;
         }
+
+        const { r, g, b } = paint.color;
+        const rgb = `rgb(${Math.round(r * 255)}, ${Math.round(
+            g * 255
+        )}, ${Math.round(b * 255)})`;
+
+        colorTokens[style.name] = rgb;
     });
 
     return colorTokens;

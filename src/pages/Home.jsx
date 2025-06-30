@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { getFileData } from "../api/figma";
-import { extractAllColors } from "../utils/extractTokens";
+import { extractColors } from "../utils/extractTokens";
+import { exportAsJSON, exportAsSCSS } from "../utils/exportTokens";
 import { Form, Button, Alert } from "react-bootstrap";
+import ColorSwatchGrid from "../components/ColorSwatchGrid";
 
 const Home = () => {
     const [fileKey, setFileKey] = useState("");
@@ -34,10 +36,10 @@ const Home = () => {
             };
 
             const nodes = flattenNodes(raw.document);
-            const colorTokens = extractAllColors(raw.styles, nodes);
+            const colorTokens = extractColors(raw.styles, nodes);
             setOutput(colorTokens);
-            console.log("📦 Figma response:", raw);
-            console.log("🎨 Styles object:", raw.styles);
+            console.log("🧱 Flattened nodes:", nodes);
+            console.log("🎨 Styles:", raw.styles);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -76,13 +78,28 @@ const Home = () => {
             )}
 
             {output && (
-                <div className="mt-4">
-                    <h4>Extracted Color Tokens</h4>
-                    <pre className="bg-light p-3 rounded">
+                <>
+                    <h4 className="mt-5">🎨 Extracted Color Tokens</h4>
+                    <ColorSwatchGrid colors={output} />
+                    <pre className="bg-light p-3 rounded mt-4">
                         {JSON.stringify(output, null, 2)}
                     </pre>
-                </div>
+                </>
             )}
+            <div className="d-flex gap-2 mt-4">
+                <button
+                    className="btn btn-outline-primary"
+                    onClick={() => exportAsJSON(output)}
+                >
+                    📄 Export as JSON
+                </button>
+                <button
+                    className="btn btn-outline-secondary"
+                    onClick={() => exportAsSCSS(output)}
+                >
+                    💅 Export as SCSS
+                </button>
+            </div>
         </div>
     );
 };
