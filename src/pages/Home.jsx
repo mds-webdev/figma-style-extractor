@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getFileData } from "../api/figma";
-import { extractColors } from "../utils/extractTokens";
+import { extractAllColors } from "../utils/extractTokens";
 import { Form, Button, Alert } from "react-bootstrap";
 
 const Home = () => {
@@ -34,8 +34,10 @@ const Home = () => {
             };
 
             const nodes = flattenNodes(raw.document);
-            const colorTokens = extractColors(raw.styles, nodes);
+            const colorTokens = extractAllColors(raw.styles, nodes);
             setOutput(colorTokens);
+            console.log("📦 Figma response:", raw);
+            console.log("🎨 Styles object:", raw.styles);
         } catch (err) {
             setError(err.message);
         } finally {
