@@ -44,24 +44,19 @@ const Home = () => {
 
   return (
       <div className="container my-5">
+          <h1 className="mb-4">🎨 Figma Token Extractor</h1>
           {/* 🔍 Project Picker */}
           <FigmaProjectPicker
               setSelectedProject={setSelectedProject}
-              extractTokens={extractTokens}
+              setFileKey={setFileKey}
+              extractTokens={extractTokens} // optionally keep this for file-only clicks
+              handleFetch={handleFetch}
           />
 
-          {/* ✨ Selected project feedback */}
-          {selectedProject && (
-              <div className="alert alert-success mt-3">
-                  <strong>Selected Project:</strong> {selectedProject.name}{" "}
-                  <br />
-                  <small>Project ID: {selectedProject.id}</small>
-              </div>
-          )}
-          <h1 className="mb-4">🎨 Figma Token Extractor</h1>
-
+         
+          <h4 className="my-4">OR enter Figma File Key</h4>
           <div className="form-group mb-3">
-              <label>Figma File Key</label>
+              <label className='mb-2'>Figma File Key</label>
               <input
                   className="form-control"
                   type="text"
