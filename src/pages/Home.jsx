@@ -1,107 +1,116 @@
-import React, { useState, useEffect } from "react";
-import { getFileData } from "../api/figma";
-import { extractColors } from "../utils/extractTokens";
-import { exportAsJSON, exportAsSCSS } from "../utils/exportTokens";
-import { Form, Button, Alert } from "react-bootstrap";
-import ColorSwatchGrid from "../components/ColorSwatchGrid";
+import React, { useState } from 'react';
+import { getFileData } from '../api/figma';
+import { extractTokens } from '../utils/extractTokens';
+import { exportAsJSON, exportAsSCSS } from '../utils/exportTokens';
+import ColorSwatchGrid from '../components/ColorSwatchGrid';
+import '../styles/Home.css';
 
 const Home = () => {
-    const [fileKey, setFileKey] = useState("");
-    const [output, setOutput] = useState(null);
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
+  const [fileKey, setFileKey] = useState('');
+  const [output, setOutput] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-    const handleFetch = async () => {
-        setError(null);
-        setLoading(true);
-        setOutput(null);
-        try {
-            const figmaToken = process.env.REACT_APP_FIGMA_API_KEY;
-            if (!figmaToken) {
-                throw new Error(
-                    "Figma API key missing! Check your .env setup."
-                );
-            }
+  const flattenNodes = (node, acc = {}) => {
+    if (!node) return acc;
+    acc[node.id] = node;
+    if (node.children) {
+      node.children.forEach((child) => flattenNodes(child, acc));
+    }
+    return acc;
+  };
 
-            const raw = await getFileData(fileKey, figmaToken);
+  const handleFetch = async () => {
+    setError(null);
+    setLoading(true);
+    setOutput(null);
 
-            // Flatten nodes to simplify mapping
-            const flattenNodes = (node, acc = {}) => {
-                if (!node) return acc;
-                acc[node.id] = node;
-                if (node.children) {
-                    node.children.forEach((child) => flattenNodes(child, acc));
-                }
-                return acc;
-            };
+    try {
+      const figmaToken = process.env.REACT_APP_FIGMA_API_KEY;
+      if (!figmaToken) throw new Error('Missing Figma API key. Check .env setup.');
 
-            const nodes = flattenNodes(raw.document);
-            const colorTokens = extractColors(raw.styles, nodes);
-            setOutput(colorTokens);
-            console.log("🧱 Flattened nodes:", nodes);
-            console.log("🎨 Styles:", raw.styles);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+      const raw = await getFileData(fileKey, figmaToken);
+      const nodes = flattenNodes(raw.document);
+      const tokens = extractTokens(raw.styles, nodes);
+      setOutput(tokens);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <div className="container mt-5">
-            <h1>🎨 Figma Style Extractor</h1>
+  return (
+    <div className="container my-5">
+      <h1 className="mb-4">🎨 Figma Token Extractor</h1>
 
-            <Form>
-                <Form.Group>
-                    <Form.Label>Figma File Key</Form.Label>
-                    <Form.Control
-                        type="text"
-                        value={fileKey}
-                        onChange={(e) => setFileKey(e.target.value)}
-                        placeholder="Enter your Figma file key"
-                    />
-                </Form.Group>
-                <Button
-                    variant="primary"
-                    className="mt-3"
-                    onClick={handleFetch}
-                    disabled={loading}
-                >
-                    {loading ? "Fetching…" : "Extract Styles"}
-                </Button>
-            </Form>
+      <div className="form-group mb-3">
+        <label>Figma File Key</label>
+        <input
+          className="form-control"
+          type="text"
+          placeholder="Paste your Figma file key here"
+          value={fileKey}
+          onChange={(e) => setFileKey(e.target.value)}
+        />
+      </div>
 
-            {error && (
-                <Alert variant="danger" className="mt-4">
-                    ⚠️ {error}
-                </Alert>
-            )}
+      <button
+        className="btn btn-primary"
+        onClick={handleFetch}
+        disabled={loading || !fileKey}
+      >
+        {loading ? 'Extracting...' : 'Extract Tokens'}
+      </button>
 
-            {output && (
-                <>
-                    <h4 className="mt-5">🎨 Extracted Color Tokens</h4>
-                    <ColorSwatchGrid colors={output} />
-                    <pre className="bg-light p-3 rounded mt-4">
-                        {JSON.stringify(output, null, 2)}
-                    </pre>
-                </>
-            )}
-            <div className="d-flex gap-2 mt-4">
-                <button
-                    className="btn btn-outline-primary"
-                    onClick={() => exportAsJSON(output)}
-                >
-                    📄 Export as JSON
-                </button>
-                <button
-                    className="btn btn-outline-secondary"
-                    onClick={() => exportAsSCSS(output)}
-                >
-                    💅 Export as SCSS
-                </button>
-            </div>
-        </div>
-    );
+      {error && <div className="alert alert-danger mt-4">⚠️ {error}</div>}
+
+      {output && (
+        <>
+          {/* Color swatches */}
+          {output.colors && (
+            <>
+              <h4 className="mt-5">🎨 Color Tokens</h4>
+              <ColorSwatchGrid colors={output.colors} />
+            </>
+          )}
+
+          {/* Typography tokens */}
+          {output.typography && (
+            <>
+              <h4 className="mt-5">🔤 Typography Tokens</h4>
+              <div className="typography-preview">
+                {Object.entries(output.typography).map(([name, style]) => (
+                  <div key={name} className="typography-item">
+                    <div style={{ ...style, marginBottom: '0.25rem' }}>{name}</div>
+                    <code style={{ fontSize: '0.8rem', color: '#666' }}>
+                      {style.fontSize}, {style.fontWeight}, {style.lineHeight}
+                    </code>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Export buttons */}
+          <div className="mt-4 d-flex gap-2">
+            <button
+              className="btn btn-outline-primary"
+              onClick={() => exportAsJSON(output)}
+            >
+              📄 Export as JSON
+            </button>
+            <button
+              className="btn btn-outline-secondary"
+              onClick={() => exportAsSCSS(output.colors)}
+            >
+              💅 Export Colors as SCSS
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
 };
 
 export default Home;
