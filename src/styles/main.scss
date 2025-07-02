@@ -1,0 +1,9 @@
+// src/styles/main.scss
+$primary: #0d6efd; // Bootstrap primary override example
+@import "bootstrap/scss/bootstrap";
+
+// Your global styles here
+body {
+  background-color: #141414;
+  color: white;
+}
