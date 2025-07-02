@@ -13,9 +13,7 @@ function App() {
                         <AppLayout>
                             <Home />
                         </AppLayout>
-                          <AppLayout>
-                            <Home />
-                        </AppLayout>
+                        
                     }
                 />
                 <Route
