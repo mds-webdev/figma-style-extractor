@@ -5,7 +5,6 @@ import "../styles/AppLayout.css";
 const tools = [
     { path: "/figma", name: "Figma Companion", emoji: "🎨" },
     { path: "/subdomain-creator", name: "Subdomain creator", emoji: "⚡" },
-    { path: "/brand-kit", name: "Brand Kit Generator", emoji: "📦" },
 ];
 
 const AppLayout = ({ children }) => {

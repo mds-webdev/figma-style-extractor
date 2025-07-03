@@ -16,13 +16,7 @@ const tools = [
         description:
             "Edit design tokens on the fly with live previews and exports.",
     },
-    {
-        name: "Brand Kit Generator",
-        path: "/brand-kit",
-        icon: "📦",
-        description:
-            "Create a downloadable package of your brand’s color and font styles.",
-    },
+    
 ];
 
 export default function Home() {
